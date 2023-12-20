@@ -11,6 +11,7 @@ from bleak.exc import BleakError
 validResponse = bool(True)
 lastWrite =time.time()
 initialTime = time.time()
+minWriteInterval = 10
 
 def to_f(raw_value):
     return((((BitArray(bin=raw_value).uint) * 0.05)-20) * 9/5.0+32)
@@ -23,10 +24,11 @@ def device_found(
     #time.sleep(1)
     #E9:87:39:C9:64:54
     #C2:71:0D:46:63:F0
+    #D6:73:D3:C6:99:B8
 	try:
 	    combustion_data = advertisement_data.manufacturer_data[0x09C7]
 	    print(device.address)
-	    if(device.address == "E9:87:39:C9:64:54"):
+	    if(device.address == "D6:73:D3:C6:99:B8"):
 	        a = BitStream(combustion_data)
 	        a.pos=0
 	        t = BitArray(combustion_data)
@@ -40,7 +42,9 @@ def device_found(
 	        print(c)
 	        d = BitStream(c)
 	        
-	        b=f'{(time.time() - initialTime):.3f}'+" "
+	        #If we want to restart we need the actual time, not elapsed time
+	        #b=f'{(time.time() - initialTime):.3f}'+" "
+	        b=f'{(time.time()):.3f}'+" "
 	        for i in range(8):
 	            t1 = d.read(13).bin
 	            if(t1 == "0000000000000"):
@@ -62,12 +66,15 @@ def device_found(
 	        
 	        print(47 * "-")
 	        if (validResponse):
-	            if (time.time() - lastWrite > 5):
+	            if (time.time() - lastWrite > minWriteInterval):
 	               print("Go")
 	               lastWrite = time.time()  
-	               f = open("demofile2.csv", "a")
+	               f = open("CombustComm.csv", "w")
 	               f.write(b+"\n")
 	               f.close()
+	               f = open("CombustCommCont.csv", "a")
+	               f.write(b+"\n")
+	               f.close()     
 	               #time.sleep(5)
 	except KeyError:
         # Apple company ID (0x004c) not found
