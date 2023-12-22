@@ -9,6 +9,7 @@
 
 library(shiny)
 library(viridisLite)
+library(lubridate)
 # Define UI for application that draws a histogram
 ui <- fluidPage(
   
@@ -17,10 +18,9 @@ ui <- fluidPage(
   
   # Show a plot of the generated distribution
   mainPanel(
-    "Current cook time (m)",
-    textOutput("cookTime"),
-    "Current temperatures (F)",
-    tableOutput("T1"),
+    column(3, "Current cook time (m)",textOutput("cookTime")),
+    column(3, "Start cook time", textOutput("startTime")),
+    column(6, "Current temperatures (F)", tableOutput("T1")),
     tabsetPanel(type = "tabs",
                 tabPanel("Temperature", plotOutput("timePlot")),
                 tabPanel("Heat Units", plotOutput("heatPlot")),
@@ -37,6 +37,7 @@ server <- function(input, output) {
   baseTemp = 60 #130
   defaultInterval = 10
   cookStart = 0
+  
   
   #Initial check on CPT data
   if(file.exists("../CombustCommCont.csv")){
@@ -106,11 +107,11 @@ server <- function(input, output) {
     minA <- min(accumulatedUnits[,2:9])
     if(maxA == minA) {maxA = maxA+1}
     maxTime = max(demo$V1/60, 10)
-    plot(accumulatedUnits[,1]/60, accumulatedUnits[,2], type="b", lwd=2, col=colorMap[1], 
+    plot(accumulatedUnits[,1]/60, accumulatedUnits[,2], type="l", lwd=3, col=colorMap[1], 
          pch=1, ylim = c(minA, maxA), xlim=c(0,maxTime), 
          xlab="Time (m)", ylab="Accumulated Heat Units")
     for (j in 3:9){
-      lines(accumulatedUnits[,1]/60, accumulatedUnits[,j], type="b", lwd=2, col=colorMap[j-1], pch=j-1) 
+      lines(accumulatedUnits[,1]/60, accumulatedUnits[,j], type="l", lwd=3, col=colorMap[j-1], pch=j-1) 
     }
   })
 
@@ -121,15 +122,15 @@ server <- function(input, output) {
     minT = min(demo[,2:9])-1
     maxTime = max(demo$V1/60, 10)
     colorMap = viridis(8)
-    plot(demo$V1/60,demo$V2, type="b", col=colorMap[1], lwd=2, 
+    plot(demo$V1/60,demo$V2, type="l", col=colorMap[1], lwd=2, 
          xlab="Time (m)", ylab="Temp (F)", ylim=c(minT, maxT), xlim=c(0,maxTime), pch=1)
-    lines(demo$V1/60, demo$V3, type="b", lwd=2, col=colorMap[2], pch=2)
-    lines(demo$V1/60, demo$V4, type="b", lwd=2, col=colorMap[3], pch=3) 
-    lines(demo$V1/60, demo$V5, type="b", lwd=2, col=colorMap[4], pch=4) 
-    lines(demo$V1/60, demo$V6, type="b", lwd=2, col=colorMap[5], pch=6) 
-    lines(demo$V1/60, demo$V7, type="b", lwd=2, col=colorMap[6], pch=6) 
-    lines(demo$V1/60, demo$V8, type="b", lwd=2, col=colorMap[7], pch=7) 
-    lines(demo$V1/60, demo$V9, type="b", lwd=2, col=colorMap[8], pch=8) 
+    lines(demo$V1/60, demo$V3, type="l", lwd=2, col=colorMap[2], pch=2)
+    lines(demo$V1/60, demo$V4, type="l", lwd=2, col=colorMap[3], pch=3) 
+    lines(demo$V1/60, demo$V5, type="l", lwd=2, col=colorMap[4], pch=4) 
+    lines(demo$V1/60, demo$V6, type="l", lwd=2, col=colorMap[5], pch=6) 
+    lines(demo$V1/60, demo$V7, type="l", lwd=2, col=colorMap[6], pch=6) 
+    lines(demo$V1/60, demo$V8, type="l", lwd=2, col=colorMap[7], pch=7) 
+    lines(demo$V1/60, demo$V9, type="l", lwd=2, col=colorMap[8], pch=8) 
     
   })
   
@@ -150,6 +151,12 @@ server <- function(input, output) {
   }, digits=1) 
   
   output$cookTime = renderText({ round((demo1()[,1]-cookStart)/60, digits=2)})
+  
+  output$startTime = renderText({
+    tst = (as_datetime(cookStart))
+    tmp = paste0(month(tst),"-", day(tst),"-", year(tst),"\n",
+          hour(tst)-6,":", minute(tst),":", round(second(tst))) 
+  })
 }
 
 # Run the application 
