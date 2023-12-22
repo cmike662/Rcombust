@@ -24,7 +24,7 @@ ui <- fluidPage(
     tabsetPanel(type = "tabs",
                 tabPanel("Temperature", plotOutput("timePlot")),
                 tabPanel("Heat Units", plotOutput("heatPlot")),
-                tabPanel("Heat flux", plotOutput("fluxPlot"))
+                tabPanel("Heat Gradient", plotOutput("fluxPlot"))
     )
   )
 )
@@ -34,7 +34,7 @@ server <- function(input, output) {
   sumHeatUnits <- c(0,0,0,0,0,0,0,0,0)
   demo <- data.frame()
   accumulatedUnits <- data.frame()
-  baseTemp = 60 #130
+  baseTemp = 130
   defaultInterval = 10
   cookStart = 0
   
@@ -153,9 +153,10 @@ server <- function(input, output) {
   output$cookTime = renderText({ round((demo1()[,1]-cookStart)/60, digits=2)})
   
   output$startTime = renderText({
-    tst = (as_datetime(cookStart))
+    #The with_tz() should convert it to the local timezone
+    tst = with_tz(as_datetime(cookStart))
     tmp = paste0(month(tst),"-", day(tst),"-", year(tst),"\n",
-          hour(tst)-6,":", minute(tst),":", round(second(tst))) 
+          hour(tst),":", minute(tst),":", round(second(tst))) 
   })
 }
 
