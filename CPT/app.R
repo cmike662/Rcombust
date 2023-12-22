@@ -51,7 +51,7 @@ server <- function(input, output) {
       deltaT = demo[j,1] - demo[j-1,1]
       if(deltaT > 0){
         for (j1 in 2:9){
-          sumHeatUnits[j1] <- max(0, (demo[j,j1]-baseTemp)/deltaT/60) + sumHeatUnits[j1]
+          sumHeatUnits[j1] <- max(0, (demo[j,j1]-baseTemp)*deltaT/60) + sumHeatUnits[j1]
         }
       }
       accumulatedUnits = rbind(accumulatedUnits, sumHeatUnits)
@@ -87,7 +87,7 @@ server <- function(input, output) {
     }
     if(deltaT > 0){
       for (j in 2:9){
-        HeatUnits[j] <- max(0, (demo1()[,j]-baseTemp)/deltaT/60) + HeatUnits[j]
+        HeatUnits[j] <- max(0, (demo1()[,j]-baseTemp)*deltaT/60) + HeatUnits[j]
       }
     }
       sumHeatUnits <<- HeatUnits
