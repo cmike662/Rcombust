@@ -28,7 +28,8 @@ def device_found(
 	try:
 	    combustion_data = advertisement_data.manufacturer_data[0x09C7]
 	    print(device.address)
-	    if(device.address == "D6:73:D3:C6:99:B8"):
+	    #if(device.address == "D6:73:D3:C6:99:B8"):
+	    if (True):
 	        a = BitStream(combustion_data)
 	        a.pos=0
 	        t = BitArray(combustion_data)

@@ -45,24 +45,26 @@ server <- function(input, output) {
     cookStart = demo[1,1]
     demo[1,1] = 0
     accumulatedUnits = data.frame(t(sumHeatUnits))
+    if(nrow(demo > 1)) {
     for (j in 2:nrow(demo)){
       demo[j,1] = demo[j,1]-cookStart
       sumHeatUnits[1] = demo[j,1]
       deltaT = demo[j,1] - demo[j-1,1]
       if(deltaT > 0){
         for (j1 in 2:9){
-          sumHeatUnits[j1] <- max(0, (demo[j,j1]-baseTemp)*deltaT/60) + sumHeatUnits[j1]
+          sumHeatUnits[j1] <- max(0, ((demo[j,j1]+demo[j-1,j1])/2-baseTemp)*deltaT/60) + sumHeatUnits[j1]
         }
       }
       accumulatedUnits = rbind(accumulatedUnits, sumHeatUnits)
+    }
     }
   }
   while (!file.exists("../CombustComm.csv")){
     Sys.sleep(1)
   }
-  demo1 <- reactiveFileReader(10000, NULL, "../CombustComm.csv", 
+  demo1 <- reactiveFileReader(7000, NULL, "../CombustComm.csv", 
                               read.table, quote="\"", comment.char="")
-
+  #tryCatch(read.table(x, header = TRUE, sep = '|'), error=function(e) NULL)
   
   observeEvent(demo1(), {
     if (nrow(demo) == 0){
@@ -87,7 +89,7 @@ server <- function(input, output) {
     }
     if(deltaT > 0){
       for (j in 2:9){
-        HeatUnits[j] <- max(0, (demo1()[,j]-baseTemp)*deltaT/60) + HeatUnits[j]
+        HeatUnits[j] <- max(0, ((demo1()[,j] + demo[nr-1,j])/2-baseTemp)*deltaT/60) + HeatUnits[j]
       }
     }
       sumHeatUnits <<- HeatUnits
@@ -103,14 +105,14 @@ server <- function(input, output) {
   output$heatPlot <- renderPlot({
     t = demo1()
     colorMap = viridis(8)
-    maxA <- max(accumulatedUnits[,2:9])
-    minA <- min(accumulatedUnits[,2:9])
+    maxA <- max(accumulatedUnits[,6:9])
+    minA <- min(accumulatedUnits[,6:9])
     if(maxA == minA) {maxA = maxA+1}
     maxTime = max(demo$V1/60, 10)
-    plot(accumulatedUnits[,1]/60, accumulatedUnits[,2], type="l", lwd=3, col=colorMap[1], 
+    plot(accumulatedUnits[,1]/60, accumulatedUnits[,6], type="l", lwd=3, col=colorMap[1], 
          pch=1, ylim = c(minA, maxA), xlim=c(0,maxTime), 
          xlab="Time (m)", ylab="Accumulated Heat Units")
-    for (j in 3:9){
+    for (j in 7:9){
       lines(accumulatedUnits[,1]/60, accumulatedUnits[,j], type="l", lwd=3, col=colorMap[j-1], pch=j-1) 
     }
   })
