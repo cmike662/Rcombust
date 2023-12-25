@@ -12,8 +12,11 @@ sudo apt install r-base-core
 
 And then 4 R packages including shiny, the web application framework.  Lubridate eases the conversion from UTC time to local time, while viridislite provides a palate for graphs that is color-blind friendly.
 sudo apt install r-cran-shiny
+
 sudo apt install r-cran-lubridate
+
 sudo apt install r-cran-viridislite
+
 sudo apt install r-cran-shinythemes
 
 
