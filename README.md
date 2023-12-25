@@ -25,7 +25,7 @@ sudo apt install r-cran-viridislite
 sudo apt install r-cran-shinythemes
 
 
-Install the github software into a directory of your choice.  I used on called Rcombust, but the specific name should not matter.  So now I have a directory called Rcombust that contains the files BLEreader.py and start.R.  The directory also has a subdirectory called CPT, and that directory contains the app.R (that’s the shiny app).  
+Install the github software into a directory of your choice.  I used one called Rcombust, but the specific name should not matter.  So now I have a directory called Rcombust that contains the files BLEreader.py and start.R.  The directory also has a subdirectory called CPT, and that directory contains the app.R (that’s the shiny app).  
 
 Something like this...
 Rcombust
@@ -77,16 +77,20 @@ Mode : 0b00
 This seems to be an invalid advertisement, as most of the temperature data bits are 0 (-4 degrees F after translation).  I drop any advertisement that contains any temperature data with a bits = 0. It seems strange that they would spend energy sending out invalid advertisements, but perhaps it is a hardware limitation.  
 
 Now switch to the second terminal and type:
+
 ./start.R
 
 This starts the shiny app and you should soon see the interface.  It may take it up to a minute to capture enough data to populate the graphs. 
 
 If you try these scripts on a windows computer (and yes, if you have a Bluetooth compatible computer these scripts should work in a python environment), start.R won’t work.  Windows and Linux differ in how they retrieve the local IP number.  The alternative is to start the shiny app manually.  In the terminal type:
 R
+
 library(shiny)
+
 runApp('CPT', port=7775, host='your_local_IP_address') 
 
 R starts an R console.  library(shiny) loads shiny into that console.  The runApp() is a shiny function to start the shiny app.  It take two arguments, a port number and your local IP address.  On linux you find your local IP address with ifconfig, but on windows one uses ipconfig and the format of the result is different (hence the problem with start.R).  On windows run ipconfig and look for the line starting with ‘IPv4 Address’.  It should be something like “192.168.1.32’.  So your runApp line would be:
+
 runApp(‘CPT’, port=7775, host=’192.168.1.32’)
 
 Viewing the shiny webpage.
