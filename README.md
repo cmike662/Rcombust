@@ -14,6 +14,7 @@ And then 3 R packages including shiny, the web application framework.  Lubridate
 sudo apt install r-cran-shiny
 sudo apt install r-cran-lubridate
 sudo apt install r-cran-viridislite
+sudo apt install r-cran-shinythemes
 
 Install the github software into a directory of your choice.  I used on called Rcombust, but the specific name should not matter.  So now I have a directory called Rcombust that contains the files BLEreader.py and start.R.  The directory also has a subdirectory called CPT, and that directory contains the app.R (that’s the shiny app).  
 
