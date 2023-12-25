@@ -8,11 +8,13 @@
 #
 
 library(shiny)
+library(shinythemes)
 library(viridisLite)
 library(lubridate)
 # Define UI for application that draws a histogram
 ui <- fluidPage(
-  
+  theme = shinytheme("slate"),
+  #shinythemes::themeSelector(),
   #Application title
   titlePanel("Shiny CPT app"),
   
@@ -22,8 +24,17 @@ ui <- fluidPage(
     column(3, "Start cook time", textOutput("startTime")),
     column(6, "Current temperatures (F)", tableOutput("T1")),
     tabsetPanel(type = "tabs",
-                tabPanel("Temperature", plotOutput("timePlot")),
-                tabPanel("Heat Units", plotOutput("heatPlot")),
+                tabPanel("Temperature", plotOutput("timePlot", 
+                                                   click = "timePlot_click",
+                                                   dblclick = "timePlot_dblclick",
+                                                   brush = brushOpts(
+                                                     id = "timePlot_brush",
+                                                     resetOnNew = TRUE
+                                                   ) ),
+                         verbatimTextOutput("info")),
+                tabPanel("Heat Units", plotOutput("heatPlot",
+                                                  click="heatPlot_click"),
+                        verbatimTextOutput("infoHeat")),
                 tabPanel("Heat Gradient", plotOutput("fluxPlot"))
     )
   )
@@ -38,6 +49,7 @@ server <- function(input, output) {
   defaultInterval = 10
   cookStart = 0
   
+  ranges <- reactiveValues(x = NULL, y = NULL)
   
   #Initial check on CPT data
   if(file.exists("../CombustCommCont.csv")){
@@ -45,16 +57,16 @@ server <- function(input, output) {
     cookStart = demo[1,1]
     demo[1,1] = 0
     accumulatedUnits = data.frame(t(sumHeatUnits))
-    if(nrow(demo > 1)) {
+    if(nrow(demo) > 1) {
     for (j in 2:nrow(demo)){
       demo[j,1] = demo[j,1]-cookStart
       sumHeatUnits[1] = demo[j,1]
       deltaT = demo[j,1] - demo[j-1,1]
-      if(deltaT > 0){
+      #if(deltaT > 0){
         for (j1 in 2:9){
           sumHeatUnits[j1] <- max(0, ((demo[j,j1]+demo[j-1,j1])/2-baseTemp)*deltaT/60) + sumHeatUnits[j1]
         }
-      }
+      #}
       accumulatedUnits = rbind(accumulatedUnits, sumHeatUnits)
     }
     }
@@ -73,11 +85,9 @@ server <- function(input, output) {
       demo <<- tmp
       cookStart <<- demo1()[1,1]
     }else {
-      #curTime = demo1()[1,1] - cookStart
       tmp = demo1()
       tmp[1,1] = demo1()[1,1] - cookStart 
       demo <<- rbind(demo, tmp)
-      #demo[nrow(demo),1] = curTime
     }
     HeatUnits <- sumHeatUnits
     nr <- nrow(demo)
@@ -98,8 +108,6 @@ server <- function(input, output) {
       } else {
         accumulatedUnits <<- rbind(accumulatedUnits, sumHeatUnits)
       }
-
-    #print(accumulatedUnits)
   })
   
   output$heatPlot <- renderPlot({
@@ -116,16 +124,26 @@ server <- function(input, output) {
       lines(accumulatedUnits[,1]/60, accumulatedUnits[,j], type="l", lwd=3, col=colorMap[j-1], pch=j-1) 
     }
   })
-
+  
+  #Respond to click on accumulated plot
+  output$infoHeat <- renderText({
+    paste0("Time: ", input$heatPlot_click$x, "\nAccumulated units: ", input$heatPlot_click$y)
+  })
+  
+  
   #Plot the temperature v time plot  
   output$timePlot <- renderPlot({ 
     tmp = demo1()
-    maxT = max(demo[,2:9])+1
-    minT = min(demo[,2:9])-1
-    maxTime = max(demo$V1/60, 10)
+    if (!is.null(ranges$x)) {
+      rangeX = ranges$x
+      rangeY = ranges$y
+    } else {
+      rangeX = c(0, max(demo[,1]/60, 10))
+      rangeY = c(min(demo[,2:9])-1, max(demo[,2:9])+1)
+    }
     colorMap = viridis(8)
     plot(demo$V1/60,demo$V2, type="l", col=colorMap[1], lwd=2, 
-         xlab="Time (m)", ylab="Temp (F)", ylim=c(minT, maxT), xlim=c(0,maxTime), pch=1)
+         xlab="Time (m)", ylab="Temp (F)", ylim=rangeY, xlim=rangeX, pch=1)
     lines(demo$V1/60, demo$V3, type="l", lwd=2, col=colorMap[2], pch=2)
     lines(demo$V1/60, demo$V4, type="l", lwd=2, col=colorMap[3], pch=3) 
     lines(demo$V1/60, demo$V5, type="l", lwd=2, col=colorMap[4], pch=4) 
@@ -136,6 +154,25 @@ server <- function(input, output) {
     
   })
   
+  # When a double-click happens, check if there's a brush on the plot.
+  # If so, zoom to the brush bounds; if not, reset the zoom.
+  observeEvent(input$timePlot_dblclick, {
+    brush <- input$timePlot_brush
+    if (!is.null(brush)) {
+      ranges$x <- c(brush$xmin, brush$xmax)
+      ranges$y <- c(brush$ymin, brush$ymax)
+      
+    } else {
+      ranges$x <- NULL
+      ranges$y <- NULL
+    }
+  })  
+
+  #Response to click on temperature graph  
+  output$info <- renderText({
+    paste0("Time: ", input$timePlot_click$x, "\nTemperature: ", input$timePlot_click$y)
+  })
+  
   #Render the flux chart
   output$fluxPlot <- renderPlot({
     vcat <- vector()
@@ -144,7 +181,7 @@ server <- function(input, output) {
       vcat[j] = 8-j
       vflux[j] = (demo1()[,j+1] - demo1()[,j+2])
     }
-    plot(vcat, vflux, type="b", xlab="probe", ylab="Delta T", xlim=rev(range(vcat)))
+    plot(vcat, vflux, type="b", xlab="Sensor", ylab="Delta T", xlim=rev(range(vcat)))
   }) 
   
   output$T1 = renderTable({
