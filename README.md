@@ -3,14 +3,18 @@ Preparing the Pi
 On the python side two packages need to be installed.  Both of these were available in the repositories for my RaspberryPi-OS (64bit).  I believe all this software could be installed using Add/Remove software from the Pi preferences menu.
 
 Bitstring allows us to unpack the 13 bit temperatures in the Bluetooth advertisement
+
 sudo apt install python3-bitstring
+
 Bleak is the library that allows us to access the Bluetooth advertisements
+
 sudo apt install python3-bleak
 
 On the R side we need to install the base R package
 sudo apt install r-base-core
 
 And then 4 R packages including shiny, the web application framework.  Lubridate eases the conversion from UTC time to local time, while viridislite provides a palate for graphs that is color-blind friendly.
+
 sudo apt install r-cran-shiny
 
 sudo apt install r-cran-lubridate
