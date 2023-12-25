@@ -11,6 +11,7 @@ Bleak is the library that allows us to access the Bluetooth advertisements
 sudo apt install python3-bleak
 
 On the R side we need to install the base R package
+
 sudo apt install r-base-core
 
 And then 4 R packages including shiny, the web application framework.  Lubridate eases the conversion from UTC time to local time, while viridislite provides a palate for graphs that is color-blind friendly.
